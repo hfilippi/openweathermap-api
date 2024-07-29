@@ -17,10 +17,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import ar.com.vampiro.openweathermapapi.error.RestTemplateResponseErrorHandler;
 import ar.com.vampiro.openweathermapapi.error.WeatherApiCallException;
-import ar.com.vampiro.openweathermapapi.model.Units;
-import ar.com.vampiro.openweathermapapi.model.WeahterBasicResponse;
 import ar.com.vampiro.openweathermapapi.model.Weather;
-import ar.com.vampiro.openweathermapapi.model.WeatherBasicResponseAdapter;
 import ar.com.vampiro.openweathermapapi.model.WeatherResponse;
 import ar.com.vampiro.openweathermapapi.service.WeatherService;
 import lombok.extern.slf4j.Slf4j;
@@ -34,12 +31,10 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Service
-@CacheConfig(cacheNames = { "weather-cache", "weather-basic-cache", "weather-pico-display-cache" })
+@CacheConfig(cacheNames = { "weather-cache" })
 public class WeatherServiceImpl implements WeatherService {
 
 	private RestTemplate restTemplate;
-
-	private WeatherBasicResponseAdapter weatherBasicResponseAdapter;
 
 	@Value("${openweathermap-org.url}")
 	private String url;
@@ -60,19 +55,17 @@ public class WeatherServiceImpl implements WeatherService {
 	private String iconUrlTemplate;
 
 	@Autowired
-	public WeatherServiceImpl(RestTemplateBuilder restTemplateBuilder,
-			WeatherBasicResponseAdapter weatherBasicResponseAdapter) {
+	public WeatherServiceImpl(RestTemplateBuilder restTemplateBuilder) {
 		this.restTemplate = restTemplateBuilder.errorHandler(new RestTemplateResponseErrorHandler()).build();
-		this.weatherBasicResponseAdapter = weatherBasicResponseAdapter;
 	}
 
 	@Override
 	@Cacheable(value = "weather-cache")
-	public WeatherResponse weather(Double lat, Double lon, Optional<String> units, Optional<String> lang,
+	public WeatherResponse weather(Double latitude, Double longitude, Optional<String> units, Optional<String> lang,
 			Optional<String> timezone) {
 		// Build API URI
-		String uri = this.buildApiUri(String.valueOf(lat), String.valueOf(lon), units.orElse(this.defaultUnits),
-				lang.orElse(this.defaultLang));
+		String uri = this.buildApiUri(String.valueOf(latitude), String.valueOf(longitude),
+				units.orElse(this.defaultUnits), lang.orElse(this.defaultLang));
 		log.info("*** API URI: {}", this.maskQueryParam(uri, "appid"));
 
 		// API call
@@ -98,47 +91,20 @@ public class WeatherServiceImpl implements WeatherService {
 		return response;
 	}
 
-	@Override
-	@Cacheable(value = "weather-basic-cache")
-	public WeahterBasicResponse weatherBasic(Double lat, Double lon, Optional<String> units, Optional<String> lang,
-			Optional<String> timezone) {
-		return this.weatherBasicResponseAdapter.toWeatherBasicResponse(this.weather(lat, lon, units, lang, timezone));
-	}
-
-	@Override
-	@Cacheable(value = "weather-pico-display-cache")
-	public String weatherPicoDisplay(Double lat, Double lon, Optional<String> units, Optional<String> lang,
-			Optional<String> timezone) {
-		WeahterBasicResponse response = this.weatherBasic(lat, lon, units, lang, timezone);
-
-		String tempSymbol = this.tempSymbol(units.orElse(this.defaultUnits));
-
-		StringBuilder builder = new StringBuilder();
-		builder.append(response.getDescription()).append(StringUtils.LF);
-		builder.append((int) Math.round(response.getTemp())).append(tempSymbol).append(StringUtils.LF);
-		builder.append(response.getName());
-
-		return builder.toString();
-	}
-
 	private String buildApiUri(String lat, String lon, String units, String lang) {
 		return this.url + "?lat=" + lat + "&lon=" + lon + "&appid=" + this.apiKey + "&units=" + units + "&lang=" + lang;
 	}
 
 	/*
 	 * @param seconds
+	 * 
 	 * @param timezone
 	 * 
-	 * @return LocalDateTime representation of Instant using seconds from the epoch of 1970-01-01T00:00:00Z.
+	 * @return LocalDateTime representation of Instant using seconds from the epoch
+	 * of 1970-01-01T00:00:00Z.
 	 */
 	private LocalDateTime localDateTime(Long seconds, String timezone) {
 		return Instant.ofEpochSecond(seconds).atZone(ZoneId.of(timezone)).toLocalDateTime();
-	}
-
-	private String tempSymbol(String units) {
-		return units.equalsIgnoreCase(Units.METRIC.name()) ? Units.METRIC.getSymbol()
-				: units.equalsIgnoreCase(Units.IMPERIAL.name()) ? Units.IMPERIAL.getSymbol()
-						: Units.STANDARD.getSymbol();
 	}
 
 	private String maskQueryParam(String uri, String queryParam) {
