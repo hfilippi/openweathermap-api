@@ -11,8 +11,9 @@
 	<artifactId>openweathermap-api</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>openweathermap-api</name>
+
 	<properties>
-		<java.version>16</java.version>
+		<java.version>17</java.version>
 	</properties>
 
 	<dependencies>
