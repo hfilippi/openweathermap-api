@@ -1,8 +1,9 @@
 package ar.com.vampiro.openweathermapapi.service.impl;
 
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
@@ -71,15 +72,15 @@ public class WeatherServiceImpl implements WeatherService {
 		// API call
 		WeatherResponse response = this.restTemplate.getForObject(uri, WeatherResponse.class);
 
-		if (response == null) {
+		if (Objects.isNull(response)) {
 			throw new WeatherApiCallException();
 		}
 
 		// Set sunrise_time and sunset_time
 		response.getSys().setSunriseTime(
-				this.localDateTime(response.getSys().getSunrise(), timezone.orElse(this.defaultTimezone)));
+				localDateTimeAsString(response.getSys().getSunrise(), timezone.orElse(this.defaultTimezone)));
 		response.getSys().setSunsetTime(
-				this.localDateTime(response.getSys().getSunset(), timezone.orElse(this.defaultTimezone)));
+				localDateTimeAsString(response.getSys().getSunset(), timezone.orElse(this.defaultTimezone)));
 
 		// Set weather.description and weather.icon_url
 		Optional<Weather> weather = response.getWeather().stream().findFirst();
@@ -103,8 +104,9 @@ public class WeatherServiceImpl implements WeatherService {
 	 * @return LocalDateTime representation of Instant using seconds from the epoch
 	 * of 1970-01-01T00:00:00Z.
 	 */
-	private LocalDateTime localDateTime(Long seconds, String timezone) {
-		return Instant.ofEpochSecond(seconds).atZone(ZoneId.of(timezone)).toLocalDateTime();
+	private String localDateTimeAsString(Long seconds, String timezone) {
+		return DateTimeFormatter.ofPattern("HH:mm")
+				.format(Instant.ofEpochSecond(seconds).atZone(ZoneId.of(timezone)).toLocalDateTime());
 	}
 
 	private String maskQueryParam(String uri, String queryParam) {

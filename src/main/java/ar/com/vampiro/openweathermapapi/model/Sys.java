@@ -1,8 +1,5 @@
 package ar.com.vampiro.openweathermapapi.model;
 
-import java.time.LocalDateTime;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.AllArgsConstructor;
@@ -30,11 +27,9 @@ public class Sys {
 	private Long sunset;
 
 	@JsonProperty("sunrise_time")
-	@JsonFormat(pattern = "HH:mm")
-	private LocalDateTime sunriseTime;
+	private String sunriseTime;
 
 	@JsonProperty("sunset_time")
-	@JsonFormat(pattern = "HH:mm")
-	private LocalDateTime sunsetTime;
+	private String sunsetTime;
 
 }
