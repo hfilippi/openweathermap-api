@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ar.com.vampiro.openweathermapapi.model.WeatherResponse;
 import ar.com.vampiro.openweathermapapi.service.WeatherService;
+import reactor.core.publisher.Mono;
 
 @RestController
 @RequestMapping(value = "/openweather/v1/weather")
@@ -23,7 +24,7 @@ public class WeatherController {
 	}
 
 	@GetMapping
-	public WeatherResponse weather(@RequestParam Double latitude, @RequestParam Double longitude,
+	public Mono<WeatherResponse> weather(@RequestParam Double latitude, @RequestParam Double longitude,
 			@RequestParam Optional<String> units, @RequestParam Optional<String> lang,
 			@RequestParam Optional<String> timezone) {
 		return this.weatherService.weather(latitude, longitude, units, lang, timezone);
