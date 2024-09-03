@@ -53,8 +53,6 @@ public class WeatherServiceImpl implements WeatherService {
 	@Cacheable(value = "weather-cache")
 	public Mono<WeatherResponse> weather(Double latitude, Double longitude, Optional<String> units,
 			Optional<String> lang, Optional<String> timezone) {
-
-		// API call
 		// @formatter:off
 		return WebClient.create()
 				.get()
@@ -79,6 +77,7 @@ public class WeatherServiceImpl implements WeatherService {
 						weather.get().setIconURL(StringUtils.replace(this.iconUrlTemplate, "{icon}", weather.get().getIcon()));
 					}
 				})
+				// Error handling
 				.onErrorMap(Throwable.class, t -> new WeatherApiCallException());
 		// @formatter:on
 	}
