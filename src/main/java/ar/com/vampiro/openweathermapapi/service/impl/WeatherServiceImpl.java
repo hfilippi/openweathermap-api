@@ -7,7 +7,6 @@ import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -28,7 +27,6 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Service
-@CacheConfig(cacheNames = { "weather-cache" })
 public class WeatherServiceImpl implements WeatherService {
 
 	@Value("${openweathermap-org.url}")
