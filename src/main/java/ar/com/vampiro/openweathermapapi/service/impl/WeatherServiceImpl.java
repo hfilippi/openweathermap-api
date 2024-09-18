@@ -52,7 +52,7 @@ public class WeatherServiceImpl implements WeatherService {
 	private static final String SUNRISE_SUNSET_TIME_FORMAT = "HH:mm";
 
 	@Override
-	@Cacheable(value = "weather-cache")
+	@Cacheable("weather")
 	public Mono<WeatherResponse> weather(Double latitude, Double longitude, Optional<String> units,
 			Optional<String> lang, Optional<String> timezone) {
 		// @formatter:off
