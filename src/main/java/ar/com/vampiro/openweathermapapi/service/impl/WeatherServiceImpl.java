@@ -49,6 +49,8 @@ public class WeatherServiceImpl implements WeatherService {
 	@Value("${openweathermap-org.icon_url}")
 	private String iconUrlTemplate;
 
+	private static final String SUNRISE_SUNSET_TIME_FORMAT = "HH:mm";
+
 	@Override
 	@Cacheable(value = "weather-cache")
 	public Mono<WeatherResponse> weather(Double latitude, Double longitude, Optional<String> units,
@@ -76,6 +78,8 @@ public class WeatherServiceImpl implements WeatherService {
 						weather.get().setDescription(StringUtils.capitalize(weather.get().getDescription()));
 						weather.get().setIconURL(StringUtils.replace(this.iconUrlTemplate, "{icon}", weather.get().getIcon()));
 					}
+
+					log.info(body.toString());
 				})
 				// Error handling
 				.onErrorMap(Throwable.class, t -> new WeatherApiCallException());
@@ -91,7 +95,7 @@ public class WeatherServiceImpl implements WeatherService {
 	 * of 1970-01-01T00:00:00Z.
 	 */
 	private String getSunriseSunsetTime(Long seconds, String timezone) {
-		return DateTimeFormatter.ofPattern("HH:mm")
+		return DateTimeFormatter.ofPattern(SUNRISE_SUNSET_TIME_FORMAT)
 				.format(Instant.ofEpochSecond(seconds).atZone(ZoneId.of(timezone)).toLocalDateTime());
 	}
 
