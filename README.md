@@ -14,7 +14,7 @@ Clone this repository:
 - Enjoy!
 
 ## Usage
-**POST** http://[URL]:[PORT]/openweather/v1/weather?latitude=-[latitude]&longitude=[longitude]
+**POST** http://[*URL*]:[*PORT*]/openweather/v1/weather?latitude=-[*latitude*]&longitude=[*longitude*]
 
 Example:
 

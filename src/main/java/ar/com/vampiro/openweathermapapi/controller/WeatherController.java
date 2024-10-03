@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ar.com.vampiro.openweathermapapi.model.TempResponse;
 import ar.com.vampiro.openweathermapapi.model.WeatherResponse;
 import ar.com.vampiro.openweathermapapi.service.WeatherService;
 import reactor.core.publisher.Mono;
@@ -28,6 +29,11 @@ public class WeatherController {
 			@RequestParam Optional<String> units, @RequestParam Optional<String> lang,
 			@RequestParam Optional<String> timezone) {
 		return this.weatherService.weather(latitude, longitude, units, lang, timezone);
+	}
+
+	@GetMapping("/temp")
+	public TempResponse temp(@RequestParam Optional<Double> latitude, @RequestParam Optional<Double> longitude) {
+		return this.weatherService.temp(latitude, longitude);
 	}
 
 }

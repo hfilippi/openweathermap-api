@@ -3,15 +3,18 @@ package ar.com.vampiro.openweathermapapi.service.impl;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import ar.com.vampiro.openweathermapapi.error.WeatherApiCallException;
+import ar.com.vampiro.openweathermapapi.model.TempResponse;
 import ar.com.vampiro.openweathermapapi.model.Weather;
 import ar.com.vampiro.openweathermapapi.model.WeatherResponse;
 import ar.com.vampiro.openweathermapapi.service.WeatherService;
@@ -19,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 /**
- * OpenWeather API consumer SpringBoot microservice.
+ * OpenWeather Rest API made easy.
  * 
  * @see <link>https://openweathermap.org/current#data</link>
  * @author hfilippi
@@ -47,10 +50,17 @@ public class WeatherServiceImpl implements WeatherService {
 	@Value("${openweathermap-org.icon_url}")
 	private String iconUrlTemplate;
 
+	@Value("${openweathermap-org.default-location.latitude}")
+	private Double defaultLocationLatitude;
+
+	@Value("${openweathermap-org.default-location.longitude}")
+	private Double defaultLocationLongitude;
+
 	private static final String SUNRISE_SUNSET_TIME_FORMAT = "HH:mm";
 
 	@Override
-	@Cacheable("weather")
+	@CacheEvict(value = "weather", allEntries = true)
+	@Scheduled(fixedRateString = "${openweathermap-org.cache.ttl}")
 	public Mono<WeatherResponse> weather(Double latitude, Double longitude, Optional<String> units,
 			Optional<String> lang, Optional<String> timezone) {
 		// @formatter:off
@@ -81,6 +91,33 @@ public class WeatherServiceImpl implements WeatherService {
 				})
 				// Error handling
 				.onErrorMap(Throwable.class, t -> new WeatherApiCallException());
+		// @formatter:on
+	}
+
+	@Override
+	public TempResponse temp(Optional<Double> latitude, Optional<Double> longitude) {
+		WeatherResponse weatherResponse = this.weather(latitude.orElse(this.defaultLocationLatitude),
+				longitude.orElse(this.defaultLocationLongitude), Optional.empty(), Optional.empty(), Optional.empty())
+				.block();
+
+		if (Objects.isNull(weatherResponse)) {
+			throw new WeatherApiCallException();
+		}
+
+		Optional<Weather> weather = weatherResponse.getWeather().stream().findFirst();
+		if (weather.isEmpty()) {
+			throw new WeatherApiCallException();
+		}
+
+		// @formatter:off
+		return TempResponse.builder()
+				.temp(Math.ceil(weatherResponse.getMain().getTemp()))
+				.tempMin(Math.ceil(weatherResponse.getMain().getTempMin()))
+				.tempMax(Math.ceil(weatherResponse.getMain().getTempMax()))
+				.weatherDesc(weather.get().getDescription())
+				.weatherIcon(weather.get().getIcon())
+				.location(weatherResponse.getName())
+				.build();
 		// @formatter:on
 	}
 
